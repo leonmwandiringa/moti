@@ -77,24 +77,31 @@ func main() {
 				//initialize terraform workspace
 				build.SelectTerraformWorkspace(MotiMap.Worspace)
 				color.Set(color.FgGreen, color.Bold)
-				fmt.Print("Terraform Workspace selected, Proceeding to the next Step...... \n")
+				fmt.Print("\nSucess: Terraform Workspace selected, Proceeding to the next Step...... \n")
 				color.Unset()
 
 				//validate terraform files
 				build.ValidateTerraformFiles()
 				color.Set(color.FgGreen, color.Bold)
-				fmt.Print("Terraform files Valid, Proceeding to the next Step...... \n")
+				fmt.Print("\nSuccess: Terraform files Valid, Proceeding to the next Step...... \n")
 				color.Unset()
 
 				//provision resources
 				build.ProvisionResources()
 				color.Set(color.FgGreen, color.Bold)
-				fmt.Print("Resources Provisioned, Proceeding to the next Step...... \n")
+				fmt.Print("\nSuccess: Resources Provisioned, Proceeding to the next Step...... \n")
 				color.Unset()
 
 				/////////////////////////////////////////////////////////////////////////////////
 				//Tests begin
-				data.GetAllTargetFiles()
+				canContinue, _ := data.OrchestrateGatherTestData()
+				if !canContinue {
+					color.Set(color.FgRed, color.Bold)
+					fmt.Print("\nError: Error(s) Occured Reading Terraform files...... \n")
+					color.Unset()
+					build.DeProvisionResources()
+				}
+
 
 				//provision resources
 				build.DeProvisionResources()
