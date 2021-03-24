@@ -61,7 +61,7 @@ func findPattern(target string) (error error, pattern helpers.PaternData){
 	for scanner.Scan() {
 		line += 1
 		matched, _ := regexp.MatchString(`#!/\s*@Test`, scanner.Text())
-		if matched {
+		if (matched && strings.TrimSpace(scanner.Text()[0:3]) == "#!/"){
 			patternData.File = target
 			patternData.Line = line
 			patternData.InstructionString = strings.TrimSpace(scanner.Text())
@@ -80,7 +80,7 @@ func findPattern(target string) (error error, pattern helpers.PaternData){
 
 func SyntaxAndValidations(pattern *helpers.PaternData) error{
 	var declaredInstruction helpers.DeclaredInstruction
-	instructionString := strings.TrimSpace(strings.Trim(pattern.InstructionString, "#!/@Test"))
+	instructionString := strings.TrimSpace(strings.Replace(strings.Trim(pattern.InstructionString, "#!/"), "@Test", "", -1))
 	iVerbs := strings.Split(instructionString, "::")
 	if len(iVerbs) != 3 {
 		pattern.ErrorMessage = fmt.Sprintf("Eror: Invalid Syntax in file %s at line number %s. Malformed Test Case\n", pattern.File, pattern.Line)
@@ -107,6 +107,7 @@ func SyntaxAndValidations(pattern *helpers.PaternData) error{
 		color.Unset()
 		return errors.New("A Syntax error occured")
 	}
+
 	conditionSupported := false
 	for _, v := range helpers.AllowedTestConditions{
 		if v == declaredInstruction.Condition{
@@ -114,12 +115,13 @@ func SyntaxAndValidations(pattern *helpers.PaternData) error{
 		}
 	}
 	if !conditionSupported {
-		pattern.ErrorMessage = fmt.Sprintf("Eror: Invalid Syntax in file %s at line number %s\n. Condition Not Supported or Incorrect", pattern.File, pattern.Line)
+		pattern.ErrorMessage = fmt.Sprintf("Eror: Invalid Syntax in file %s at line number %s\n. Condition Not Supported or Incorrect [Not, Equal]", pattern.File, pattern.Line)
 		color.Set(color.FgRed, color.Bold)
 		fmt.Printf("Eror: Invalid Syntax in file %s at line number %s. Condition Not Supported or Incorrect\n", pattern.File, pattern.Line)
 		color.Unset()
 		return errors.New("A Syntax error occured")
 	}
-	helpers.AllowedTestConditions
+
+	pattern.Instruction = declaredInstruction
 	return nil
 }
